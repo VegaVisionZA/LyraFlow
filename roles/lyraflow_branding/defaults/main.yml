@@ -1,0 +1,7 @@
+---
+suitecrm_web_root: "/var/www/html/suitecrm"
+client_name: "LyraFlow"
+suitecrm_theme: "LyraFlow"
+footer_supercharged_text: "Powered by LyraFlow"
+footer_powered_by_text: "LyraFlow CRM"
+client_logo_src: "roles/lyraflow_branding/files/lyraflow_navbar.png"

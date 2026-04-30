@@ -1,0 +1,136 @@
+---
+# ── 1. Copy logos to both themes ─────────────────────────────
+- name: Upload client logo to LyraFlow theme images
+  copy:
+    src: "lyraflow_navbar.png"
+    dest: "{{ suitecrm_web_root }}/themes/{{ suitecrm_theme }}/images/{{ item }}"
+    owner: www-data
+    group: www-data
+    mode: "0644"
+  loop:
+    - company_logo.png
+    - login_logo.png
+    - p_login_logo.png
+    - lyraflow_navbar.png
+    - lyraflow_logo.png
+
+- name: Upload client logo to SuiteP theme images (fallback)
+  copy:
+    src: "lyraflow_navbar.png"
+    dest: "{{ suitecrm_web_root }}/themes/SuiteP/images/{{ item }}"
+    owner: www-data
+    group: www-data
+    mode: "0644"
+  loop:
+    - company_logo.png
+    - login_logo.png
+    - p_login_logo.png
+    - lyraflow_navbar.png
+    - lyraflow_logo.png
+
+# ── 2. Set default theme ─────────────────────────────────────
+- name: Set default theme to LyraFlow in config.php
+  replace:
+    path: "{{ suitecrm_web_root }}/config.php"
+    regexp: "'default_theme' => '.*'"
+    replace: "'default_theme' => '{{ suitecrm_theme }}'"
+
+# ── 3. Patch Login.php ───────────────────────────────────────
+- name: Patch Login.php alt text to client name
+  replace:
+    path: "{{ suitecrm_web_root }}/modules/Users/Login.php"
+    regexp: 'alt="SuiteCRM"'
+    replace: 'alt="{{ client_name }}"'
+
+# ── 4. Patch header templates ────────────────────────────────
+- name: Update navbar image in LyraFlow header template
+  replace:
+    path: "{{ suitecrm_web_root }}/themes/{{ suitecrm_theme }}/tpls/_headerModuleList.tpl"
+    regexp: "themeName=SuiteP&imageName=lyraflow_logo\\.png"
+    replace: "themeName={{ suitecrm_theme }}&imageName=company_logo.png"
+
+- name: Update navbar image in SuiteP header template
+  replace:
+    path: "{{ suitecrm_web_root }}/themes/SuiteP/tpls/_headerModuleList.tpl"
+    regexp: "themeName=SuiteP&imageName=lyraflow_logo\\.png"
+    replace: "themeName={{ suitecrm_theme }}&imageName=company_logo.png"
+
+# ── 5. Patch login templates ─────────────────────────────────
+- name: Update login template theme reference in LyraFlow
+  replace:
+    path: "{{ suitecrm_web_root }}/themes/{{ suitecrm_theme }}/tpls/login.tpl"
+    regexp: "themeName=SuiteP&imageName=lyraflow_logo\\.png"
+    replace: "themeName={{ suitecrm_theme }}&imageName=company_logo.png"
+
+- name: Update footer text in LyraFlow login template
+  replace:
+    path: "{{ suitecrm_web_root }}/themes/{{ suitecrm_theme }}/tpls/login.tpl"
+    regexp: "&copy; Supercharged by SuiteCRM"
+    replace: "&copy; {{ footer_supercharged_text }}"
+
+- name: Update footer text in SuiteP login template
+  replace:
+    path: "{{ suitecrm_web_root }}/themes/SuiteP/tpls/login.tpl"
+    regexp: "&copy; Supercharged by SuiteCRM"
+    replace: "&copy; {{ footer_supercharged_text }}"
+
+# ── 6. Patch language strings ────────────────────────────────
+- name: Update LBL_SUITE_SUPERCHARGED language string
+  replace:
+    path: "{{ suitecrm_web_root }}/include/language/en_us.lang.php"
+    regexp: "'LBL_SUITE_SUPERCHARGED' => '.*'"
+    replace: "'LBL_SUITE_SUPERCHARGED' => '{{ footer_supercharged_text }}'"
+
+- name: Update LBL_SUITE_POWERED_BY language string
+  replace:
+    path: "{{ suitecrm_web_root }}/include/language/en_us.lang.php"
+    regexp: "'LBL_SUITE_POWERED_BY' => '.*'"
+    replace: "'LBL_SUITE_POWERED_BY' => '{{ footer_powered_by_text }}'"
+
+# ── 7. Clear all caches ──────────────────────────────────────
+- name: Clear Smarty template cache
+  file:
+    path: "{{ suitecrm_web_root }}/cache/smarty/templates_c"
+    state: absent
+
+- name: Recreate Smarty cache dir
+  file:
+    path: "{{ suitecrm_web_root }}/cache/smarty/templates_c"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Clear theme cache
+  file:
+    path: "{{ suitecrm_web_root }}/cache/themes"
+    state: absent
+
+- name: Recreate theme cache dir
+  file:
+    path: "{{ suitecrm_web_root }}/cache/themes"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Clear language cache
+  file:
+    path: "{{ suitecrm_web_root }}/cache/language"
+    state: absent
+
+- name: Recreate language cache dir
+  file:
+    path: "{{ suitecrm_web_root }}/cache/language"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+# ── 8. Fix permissions ───────────────────────────────────────
+- name: Fix all SuiteCRM file permissions
+  file:
+    path: "{{ suitecrm_web_root }}"
+    owner: www-data
+    group: www-data
+    recurse: true

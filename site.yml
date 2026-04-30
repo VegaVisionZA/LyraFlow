@@ -1,0 +1,9 @@
+---
+- name: Deploy SuiteCRM with LyraFlow Branding
+  hosts: suitecrm_servers
+  become: true
+  gather_facts: true
+
+  roles:
+    - suitecrm_install
+    - lyraflow_branding

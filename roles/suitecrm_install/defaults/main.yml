@@ -1,0 +1,26 @@
+---
+# Client branding
+client_name: "LyraFlow"
+client_domain: "192.168.100.72"
+client_logo_src: "roles/lyraflow_branding/files/lyraflow_navbar.png"
+
+# SuiteCRM admin credentials
+suitecrm_admin_user: "admin"
+suitecrm_admin_password: "Admin1234!"
+suitecrm_admin_email: "admin@lyraflow.co.za"
+
+# Database credentials
+db_name: "suitecrm"
+db_user: "suitecrm"
+db_password: "SuiteCRM@2024!"
+db_host: "localhost"
+
+# SuiteCRM install path
+suitecrm_web_root: "/var/www/html/suitecrm"
+
+# Theme
+suitecrm_theme: "LyraFlow"
+
+# Footer branding
+footer_supercharged_text: "Powered by LyraFlow"
+footer_powered_by_text: "LyraFlow CRM"
