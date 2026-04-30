@@ -83,14 +83,17 @@
     timeout: 300
   when: not suitecrm_installed.stat.exists
 
-- name: Extract SuiteCRM
+- name: Extract SuiteCRM to temp directory
   unarchive:
     src: /tmp/suitecrm.zip
-    dest: "{{ suitecrm_web_root }}"
+    dest: /tmp/
     remote_src: true
-    extra_opts: ["--strip-components=1"]
-    owner: www-data
-    group: www-data
+  when: not suitecrm_installed.stat.exists
+
+- name: Move SuiteCRM files to web root
+  shell: |
+    cp -r /tmp/SuiteCRM-7.14.4/. {{ suitecrm_web_root }}/
+    rm -rf /tmp/SuiteCRM-7.14.4
   when: not suitecrm_installed.stat.exists
 
 - name: Set SuiteCRM file permissions
