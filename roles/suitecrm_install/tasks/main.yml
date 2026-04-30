@@ -64,8 +64,43 @@
 
 - name: Check if SuiteCRM already installed
   stat:
-    path: "{{ suitecrm_web_root }}/config.php"
-  register: suitecrm_config
+    path: "{{ suitecrm_web_root }}/index.php"
+  register: suitecrm_installed
+
+- name: Create SuiteCRM web root directory
+  file:
+    path: "{{ suitecrm_web_root }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+  when: not suitecrm_installed.stat.exists
+
+- name: Download SuiteCRM
+  get_url:
+    url: "https://github.com/salesagility/SuiteCRM/releases/download/v7.14.4/SuiteCRM-7.14.4.zip"
+    dest: /tmp/suitecrm.zip
+    timeout: 300
+  when: not suitecrm_installed.stat.exists
+
+- name: Extract SuiteCRM
+  unarchive:
+    src: /tmp/suitecrm.zip
+    dest: "{{ suitecrm_web_root }}"
+    remote_src: true
+    extra_opts: ["--strip-components=1"]
+    owner: www-data
+    group: www-data
+  when: not suitecrm_installed.stat.exists
+
+- name: Set SuiteCRM file permissions
+  file:
+    path: "{{ suitecrm_web_root }}"
+    owner: www-data
+    group: www-data
+    recurse: true
+    mode: "0755"
+  when: not suitecrm_installed.stat.exists
 
 - name: Deploy Apache VirtualHost config
   template:
