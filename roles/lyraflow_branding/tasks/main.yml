@@ -1,9 +1,40 @@
 ---
-# ── 1. Copy logos to both themes ─────────────────────────────
+# ── 1. Create LyraFlow theme by copying SuiteP ───────────────
+- name: Check if LyraFlow theme exists
+  stat:
+    path: "{{ suitecrm_web_root }}/themes/LyraFlow"
+  register: lyraflow_theme
+
+- name: Copy SuiteP theme as LyraFlow base
+  copy:
+    src: "{{ suitecrm_web_root }}/themes/SuiteP/"
+    dest: "{{ suitecrm_web_root }}/themes/LyraFlow/"
+    remote_src: true
+    owner: www-data
+    group: www-data
+  when: not lyraflow_theme.stat.exists
+
+- name: Ensure LyraFlow images directory exists
+  file:
+    path: "{{ suitecrm_web_root }}/themes/LyraFlow/images"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Ensure LyraFlow tpls directory exists
+  file:
+    path: "{{ suitecrm_web_root }}/themes/LyraFlow/tpls"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+# ── 2. Copy logos to both themes ─────────────────────────────
 - name: Upload client logo to LyraFlow theme images
   copy:
     src: "lyraflow_navbar.png"
-    dest: "{{ suitecrm_web_root }}/themes/{{ suitecrm_theme }}/images/{{ item }}"
+    dest: "{{ suitecrm_web_root }}/themes/LyraFlow/images/{{ item }}"
     owner: www-data
     group: www-data
     mode: "0644"
@@ -28,53 +59,58 @@
     - lyraflow_navbar.png
     - lyraflow_logo.png
 
-# ── 2. Set default theme ─────────────────────────────────────
+# ── 3. Set default theme ─────────────────────────────────────
 - name: Set default theme to LyraFlow in config.php
   replace:
     path: "{{ suitecrm_web_root }}/config.php"
     regexp: "'default_theme' => '.*'"
     replace: "'default_theme' => '{{ suitecrm_theme }}'"
 
-# ── 3. Patch Login.php ───────────────────────────────────────
+# ── 4. Patch Login.php ───────────────────────────────────────
 - name: Patch Login.php alt text to client name
   replace:
     path: "{{ suitecrm_web_root }}/modules/Users/Login.php"
     regexp: 'alt="SuiteCRM"'
     replace: 'alt="{{ client_name }}"'
 
-# ── 4. Patch header templates ────────────────────────────────
+# ── 5. Patch header templates ────────────────────────────────
 - name: Update navbar image in LyraFlow header template
   replace:
-    path: "{{ suitecrm_web_root }}/themes/{{ suitecrm_theme }}/tpls/_headerModuleList.tpl"
+    path: "{{ suitecrm_web_root }}/themes/LyraFlow/tpls/_headerModuleList.tpl"
     regexp: "themeName=SuiteP&imageName=lyraflow_logo\\.png"
     replace: "themeName={{ suitecrm_theme }}&imageName=company_logo.png"
+  ignore_errors: true
 
 - name: Update navbar image in SuiteP header template
   replace:
     path: "{{ suitecrm_web_root }}/themes/SuiteP/tpls/_headerModuleList.tpl"
     regexp: "themeName=SuiteP&imageName=lyraflow_logo\\.png"
     replace: "themeName={{ suitecrm_theme }}&imageName=company_logo.png"
+  ignore_errors: true
 
-# ── 5. Patch login templates ─────────────────────────────────
+# ── 6. Patch login templates ─────────────────────────────────
 - name: Update login template theme reference in LyraFlow
   replace:
-    path: "{{ suitecrm_web_root }}/themes/{{ suitecrm_theme }}/tpls/login.tpl"
+    path: "{{ suitecrm_web_root }}/themes/LyraFlow/tpls/login.tpl"
     regexp: "themeName=SuiteP&imageName=lyraflow_logo\\.png"
     replace: "themeName={{ suitecrm_theme }}&imageName=company_logo.png"
+  ignore_errors: true
 
 - name: Update footer text in LyraFlow login template
   replace:
-    path: "{{ suitecrm_web_root }}/themes/{{ suitecrm_theme }}/tpls/login.tpl"
+    path: "{{ suitecrm_web_root }}/themes/LyraFlow/tpls/login.tpl"
     regexp: "&copy; Supercharged by SuiteCRM"
     replace: "&copy; {{ footer_supercharged_text }}"
+  ignore_errors: true
 
 - name: Update footer text in SuiteP login template
   replace:
     path: "{{ suitecrm_web_root }}/themes/SuiteP/tpls/login.tpl"
     regexp: "&copy; Supercharged by SuiteCRM"
     replace: "&copy; {{ footer_supercharged_text }}"
+  ignore_errors: true
 
-# ── 6. Patch language strings ────────────────────────────────
+# ── 7. Patch language strings ────────────────────────────────
 - name: Update LBL_SUITE_SUPERCHARGED language string
   replace:
     path: "{{ suitecrm_web_root }}/include/language/en_us.lang.php"
@@ -87,7 +123,7 @@
     regexp: "'LBL_SUITE_POWERED_BY' => '.*'"
     replace: "'LBL_SUITE_POWERED_BY' => '{{ footer_powered_by_text }}'"
 
-# ── 7. Clear all caches ──────────────────────────────────────
+# ── 8. Clear all caches ──────────────────────────────────────
 - name: Clear Smarty template cache
   file:
     path: "{{ suitecrm_web_root }}/cache/smarty/templates_c"
@@ -127,7 +163,7 @@
     group: www-data
     mode: "0755"
 
-# ── 8. Fix permissions ───────────────────────────────────────
+# ── 9. Fix permissions ───────────────────────────────────────
 - name: Fix all SuiteCRM file permissions
   file:
     path: "{{ suitecrm_web_root }}"
